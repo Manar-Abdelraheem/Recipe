@@ -3,71 +3,91 @@ using System.IO;
 using System.Text.Json;
 using System.Text;
 using System.Collections.Generic;
+using Spectre.Console;
+using Spectre.Console.Cli;
+using System.Threading.Tasks;
 
 namespace Recipe
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-
             Recipe r = new Recipe();
-            r.AddRecipe();
-            r.ListRecipes();
-            r.EditRecipeOrCategory(Console.ReadLine(),Convert.ToInt32(Console.ReadLine()));
+            await r.AddRecipe();
+            await r.EditRecipeOrCategory(Console.ReadLine(), Convert.ToInt32(Console.ReadLine()));
+            await r.ListRecipes();
+            //r.EditRecipeOrCategory(Console.ReadLine(),Convert.ToInt32(Console.ReadLine()));
+            // var panel1 = new Panel(r.ListRecipes());
+            //AnsiConsole.Write(panel1);
         }
     }
 
     public class Recipe
     {
         public int ID { get; }
-        public string Title {get;  set; }
+        public string Title { get; set; }
         public string Ingredients { get; set; }
-        public string Categories { get; set; }
         public string Instructions { get; set; }
+        public string Categories { get; set; }
 
-        public void AddRecipe() 
+        List<Recipe> recipes = new List<Recipe>();
+        public async Task AddRecipe()
         {
-            for (int recNo=0; recNo<=ID;recNo++ )
+            
+            for (int i=0; i<2; i++) 
             {
-                var recipe = new Recipe
+
+               recipes.Add ( new Recipe
                 {
                     Title = Console.ReadLine(),
                     Ingredients = Console.ReadLine(),
-                    Instructions = Console.ReadLine(),                
+                    Instructions = Console.ReadLine(),
                     Categories = Console.ReadLine()
-                };
-                string jsonString = JsonSerializer.Serialize(recipe);
-                File.AppendAllText(@"D:\\MANAR\\Recipe Project\\Recipe.json", jsonString+ "\n");
-                
-               // Recipe recipe = JsonSerializer.Deserialize<Recipe>(jsonString);
-
-                Console.WriteLine("Do you want to add another recipe? Yes/No");
-                string answer=Console.ReadLine();
-                if (answer == "yes")
-                {
-                    recipe.AddRecipe();
-                }
-                else
-                {
-                    break;
-                }
-                                
+                });
             }
+               string jsonString = JsonSerializer.Serialize(recipes);
+               await File.WriteAllTextAsync(@"Recipe.json", jsonString);
+
+                //Console.WriteLine("Do you want to add another recipe? Yes/No");
+                //string answer = Console.ReadLine();
+        
         }
 
-        public void ListRecipes()  
+
+        public async Task  ListRecipes()
         {
-            Console.WriteLine(File.ReadAllText(@"D:\\MANAR\\Recipe Project\\Recipe.json"));
+
+            string deserializationString = await File.ReadAllTextAsync(@"Recipe.json");
+             recipes = JsonSerializer.Deserialize<List<Recipe>>(deserializationString);
+
+            foreach (var Row in recipes)
+            {
+                Console.WriteLine(Row.ID);
+                Console.WriteLine(Row.Title);
+                Console.WriteLine(Row.Ingredients);
+                Console.WriteLine(Row.Instructions);
+                Console.WriteLine(Row.Categories);
+            }            
+
         }
 
-        public void EditRecipeOrCategory(string newText, int line_to_edit) 
+        public async Task EditRecipeOrCategory(string newText,int line_to_edit)
         {
-            string[] arrOfStrLine = File.ReadAllLines(@"D:\\MANAR\\Recipe Project\\Recipe.json");
-            arrOfStrLine[line_to_edit] = newText;
-            File.WriteAllLines(@"D:\\MANAR\\Recipe Project\\Recipe.json", arrOfStrLine);
-            Console.WriteLine("\n"+ arrOfStrLine);
+            string jsonStringToEdit= await File.ReadAllTextAsync(@"Recipe.json");
+            recipes = JsonSerializer.Deserialize<List<Recipe>>(jsonStringToEdit);
+
+            recipes[line_to_edit].Title = newText;
+            
+            recipes[line_to_edit].Ingredients = newText;
+            recipes[line_to_edit].Instructions = newText;
+            recipes[line_to_edit].Categories = newText;
+            string jsonString = JsonSerializer.Serialize(recipes);
+            await File.WriteAllTextAsync(@"Recipe.json", jsonString);
+
+            Console.WriteLine(recipes[line_to_edit].Title );
         }
 
     }
 }
+

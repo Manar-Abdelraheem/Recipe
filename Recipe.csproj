@@ -5,4 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.45.1-preview.0.33" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.45.1-preview.0.33" />
+  </ItemGroup>
+
 </Project>
