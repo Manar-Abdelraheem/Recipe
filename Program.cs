@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Text;
@@ -15,12 +15,9 @@ namespace Recipe
             Recipe r = new Recipe();
             await r.AddRecipe();
             await r.ListRecipes();
-            //  var panel = new Panel("Hello World\nklerfmkmsfslkwmawklafmwlek\nkenakfonkf");
-
             //panel.Header = new PanelHeader("title");
-            // await r.EditRecipeOrCategory(Console.ReadLine(), Convert.ToInt32(Console.ReadLine()));
-            //// await r.ListRecipes();
-            //  var panel1 = new Panel(await r.ListRecipes());
+            await r.EditRecipeOrCategory(Console.ReadLine(), Convert.ToInt32(Console.ReadLine()));
+            await r.ListRecipes();
             // AnsiConsole.Write(panel1);
         }
     }
@@ -75,35 +72,45 @@ namespace Recipe
             (new SelectionPrompt<string>()
             .Title("Choose the recipe")
             .PageSize(10)
-            .MoreChoicesText("[blue](Move up and down to reveal more fruits)[/]")
+            .MoreChoicesText("[blue](Move up and down to reveal more recipes)[/]")
             .AddChoices(allTitles));
-            
 
-            //  AnsiConsole.Write(selectRecipe);
 
-            //string s = "";
-            //foreach (var Row in recipes)
-            //{
-            //    Console.WriteLine(Row.ID);
-            //    s += "Title: " + Row.Title + "\n";
-            //    s += "Ingredients: " + Row.Ingredients + "\n";
-            //    s += "Instructions: " + Row.Instructions + "\n";
-            //    s += "Categories: " + Row.Categories + "\n";
-            //}
+            string sDcetailsOfRecips = "";
+            foreach (var Row in recipes)
+            {
+                if(selectRecipe==Row.Title)
+                {
+                    sDcetailsOfRecips += "Id: " + Row.Id;
+                    sDcetailsOfRecips += "Title: " + Row.Title + "\n";
+                    sDcetailsOfRecips += "Ingredients: " + Row.Ingredients + "\n";
+                    sDcetailsOfRecips += "Instructions: " + Row.Instructions + "\n";
+                    sDcetailsOfRecips += "Categories: " + Row.Categories + "\n";
+                }
+                var panelOfrecipe = new Panel(sDcetailsOfRecips);
+                 AnsiConsole.Render(panelOfrecipe);
+            }
 
             return allTitles;
         }
 
         public async Task EditRecipeOrCategory(string newText, int line_to_edit)
         {
+
             string jsonStringToEdit = await File.ReadAllTextAsync(@"Recipe.json");
             recipes = JsonSerializer.Deserialize<List<Recipe>>(jsonStringToEdit);
-
-            recipes[line_to_edit].Title = newText;
-
-            recipes[line_to_edit].Ingredients = newText;
-            recipes[line_to_edit].Instructions = newText;
-            recipes[line_to_edit].Categories = newText;
+            //string[] editRecip = new string[recipes.Count];
+            recipes[line_to_edit].Title = Console.ReadLine();
+            recipes[line_to_edit].Ingredients = Console.ReadLine();
+            recipes[line_to_edit].Instructions = Console.ReadLine();
+            recipes[line_to_edit].Categories = Console.ReadLine();
+            //var selectRecipe = AnsiConsole.Prompt
+            //(new SelectionPrompt<string[]>()
+            //.Title("Edit recipe")
+            //.PageSize(4)
+            //.AddChoices( recipes
+            //recipes[line_to_edit].Title,
+            //));
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
 
@@ -112,5 +119,3 @@ namespace Recipe
 
     }
 }
-
-
