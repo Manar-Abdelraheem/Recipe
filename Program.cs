@@ -6,24 +6,20 @@ using Spectre.Console;
 using System.Threading.Tasks;
 namespace Recipe
 {
-
     class Program
     {
         static async Task Main(String[] args)
         {
-
             Recipe r = new Recipe();
         startPoint1:
             var ruleUp = new Rule($"[bold deeppink2]Recipe[/]");
             AnsiConsole.Write(ruleUp);
-
             var chooseAction = AnsiConsole.Prompt
             (new SelectionPrompt<string>()
             .Title("[gold1]Move up and down to reveal more actions\nPress Enter key to Choose an action[/]")
             .PageSize(4)
             .MoreChoicesText("[magenta3](Move up and down to reveal more actions)[/]")
             .AddChoices("Add recipe", "Edit recipe or category", "List recipes", "Exit"));
-
             if (chooseAction == "Exit")
             {
                 var name = AnsiConsole.Ask<string>("[gold1]Are you sure do you want to exit?\n No --> N\n Exit --> E [/]");
@@ -41,16 +37,13 @@ namespace Recipe
                 var name = AnsiConsole.Ask<string>("[gold1] Back --> B\n Exit --> E [/]");
                 if (name == "B" || name == "b") { Console.Clear(); goto startPoint1; }
             }
-
             else if (chooseAction == "List recipes")
             {
                 await r.ListRecipes();
                 var name = AnsiConsole.Ask<string>("[gold1] Back --> B\n Exit --> E [/]");
                 if (name == "B" || name == "b") { Console.Clear(); goto startPoint1; }
             }
-
         }
-
     }
 
     public class Recipe
@@ -60,7 +53,6 @@ namespace Recipe
         public string Ingredients { get; set; }
         public string Instructions { get; set; }
         public string Categories { get; set; }
-
         List<Recipe> recipes = new List<Recipe>();
         public Recipe()
         {
@@ -74,7 +66,6 @@ namespace Recipe
             var ingredients = AnsiConsole.Ask<string>("[steelblue1]Ingredients: [/]");
             var instructions = AnsiConsole.Ask<string>("[steelblue1]Instructions: [/]");
             var Categories = AnsiConsole.Ask<string>("[steelblue1]Categories: [/]");
-
             recipes.Add(new Recipe
             {
                 Id = id,
@@ -83,15 +74,12 @@ namespace Recipe
                 Instructions = instructions,
                 Categories = Categories
             });
-
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
-
         }
 
         public async Task ListRecipes()
         {
-
             string[] allTitles = new string[recipes.Count];
             if (allTitles.Length == 0)
             {
@@ -99,26 +87,21 @@ namespace Recipe
             }
             else
             {
-
                 string deserializationString = await File.ReadAllTextAsync(@"Recipe.json");
                 recipes = JsonSerializer.Deserialize<List<Recipe>>(deserializationString);
-
                 for (int id = 0; id < recipes.Count; id++)
                 {
                     allTitles[id] = recipes[id].Title;
                 }
-
                 var selectRecipe = AnsiConsole.Prompt
                 (new SelectionPrompt<string>()
                 .Title("Choose the recipe")
                 .PageSize(10)
                 .MoreChoicesText("[steelblue1](Move up and down to reveal more recipes)[/]")
                 .AddChoices(allTitles));
-
                 string detailsOfRecips = "";
                 foreach (var recipe in recipes)
                 {
-
                     if (selectRecipe == recipe.Title)
                     {
                         detailsOfRecips += "[steelblue1]Id:[/]" + $"[lightcoral] {recipe.Id + 1} \n[/]";
@@ -127,14 +110,11 @@ namespace Recipe
                         detailsOfRecips += "[steelblue1]Instructions:[/]" + $"[lightcoral] {recipe.Instructions} \n[/]";
                         detailsOfRecips += "[steelblue1]Categories:[/]" + $"[lightcoral] {recipe.Categories} \n[/]";
                     }
-
                 }
-
                 var panelOfRecipe = new Panel(detailsOfRecips);
                 panelOfRecipe.Border = BoxBorder.Double;
                 panelOfRecipe.Expand = true;
                 AnsiConsole.Write(panelOfRecipe);
-
             }
         }
 
@@ -149,6 +129,5 @@ namespace Recipe
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
         }
-
     }
 }
