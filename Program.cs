@@ -1,30 +1,60 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using System.Text;
 using System.Collections.Generic;
 using Spectre.Console;
-using Spectre.Console.Cli;
 using System.Threading.Tasks;
 namespace Recipe
 {
+
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main(String[] args)
         {
+
             Recipe r = new Recipe();
-            await r.AddRecipe();
-            await r.ListRecipes();
-            //panel.Header = new PanelHeader("title");
-            await r.EditRecipeOrCategory(Console.ReadLine(), Convert.ToInt32(Console.ReadLine()));
-            await r.ListRecipes();
-            // AnsiConsole.Write(panel1);
+        startPoint1:
+            var ruleUp = new Rule($"[bold deeppink2]Recipe[/]");
+            AnsiConsole.Write(ruleUp);
+
+            var chooseAction = AnsiConsole.Prompt
+            (new SelectionPrompt<string>()
+            .Title("[gold1]Move up and down to reveal more actions\nPress Enter key to Choose an action[/]")
+            .PageSize(4)
+            .MoreChoicesText("[magenta3](Move up and down to reveal more actions)[/]")
+            .AddChoices("Add recipe", "Edit recipe or category", "List recipes", "Exit"));
+
+            if (chooseAction == "Exit")
+            {
+                var name = AnsiConsole.Ask<string>("[gold1]Are you sure do you want to exit?\n No --> N\n Exit --> E [/]");
+                if (name == "n" || name == "N") { Console.Clear(); goto startPoint1; }
+            }
+            else if (chooseAction == "Add recipe")
+            {
+                await r.AddRecipe();
+                var name = AnsiConsole.Ask<string>("[gold1] Back --> B\n Exit --> E [/]");
+                if (name == "B" || name == "b") { Console.Clear(); goto startPoint1; }
+            }
+            else if (chooseAction == "Edit recipe or category")
+            {
+                await r.EditRecipeOrCategory(Convert.ToInt32(AnsiConsole.Ask<string>("[chartreuse3_1]Please enter the Id for the recipe: [/]")));
+                var name = AnsiConsole.Ask<string>("[gold1] Back --> B\n Exit --> E [/]");
+                if (name == "B" || name == "b") { Console.Clear(); goto startPoint1; }
+            }
+
+            else if (chooseAction == "List recipes")
+            {
+                await r.ListRecipes();
+                var name = AnsiConsole.Ask<string>("[gold1] Back --> B\n Exit --> E [/]");
+                if (name == "B" || name == "b") { Console.Clear(); goto startPoint1; }
+            }
+
         }
+
     }
 
     public class Recipe
     {
-        private static int SharedId { get; set; } 
         public int Id { get; set; }
         public string Title { get; set; }
         public string Ingredients { get; set; }
@@ -32,89 +62,92 @@ namespace Recipe
         public string Categories { get; set; }
 
         List<Recipe> recipes = new List<Recipe>();
+        public Recipe()
+        {
+            Id = recipes.Count;
+        }
 
         public async Task AddRecipe()
         {
-            string answer;
+            int id = recipes.Count;
+            var title = AnsiConsole.Ask<string>("[steelblue1]Title: [/]");
+            var ingredients = AnsiConsole.Ask<string>("[steelblue1]Ingredients: [/]");
+            var instructions = AnsiConsole.Ask<string>("[steelblue1]Instructions: [/]");
+            var Categories = AnsiConsole.Ask<string>("[steelblue1]Categories: [/]");
 
-                recipes.Add(new Recipe
-                {
-                    Id = SharedId,
-                    Title = Console.ReadLine(),
-                    Ingredients = Console.ReadLine(),
-                    Instructions = Console.ReadLine(),
-                    Categories = Console.ReadLine()
-                });
-                SharedId++;
-                Console.WriteLine("Do you want to add another recipe? Yes/No");
-                answer = Console.ReadLine();
-                if (answer == "yes")
-                {
-                    await AddRecipe();
-                }
+            recipes.Add(new Recipe
+            {
+                Id = id,
+                Title = title,
+                Ingredients = ingredients,
+                Instructions = instructions,
+                Categories = Categories
+            });
 
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
 
         }
 
-        public async Task<string[]> ListRecipes()
+        public async Task ListRecipes()
         {
-            string[] allTitles = new string[recipes.Count] ;
-            string deserializationString = await File.ReadAllTextAsync(@"Recipe.json");
-            recipes = JsonSerializer.Deserialize<List<Recipe>>(deserializationString);
 
-            for (int i = 0; i < recipes.Count; i++)
+            string[] allTitles = new string[recipes.Count];
+            if (allTitles.Length == 0)
             {
-                allTitles[i] = recipes[i].Title;
+                AnsiConsole.Markup("[gold1]There is no recipes to list, please go back and add one at least\n[/]");
             }
-            var selectRecipe = AnsiConsole.Prompt
-            (new SelectionPrompt<string>()
-            .Title("Choose the recipe")
-            .PageSize(10)
-            .MoreChoicesText("[blue](Move up and down to reveal more recipes)[/]")
-            .AddChoices(allTitles));
-
-
-            string sDcetailsOfRecips = "";
-            foreach (var Row in recipes)
+            else
             {
-                if(selectRecipe==Row.Title)
+
+                string deserializationString = await File.ReadAllTextAsync(@"Recipe.json");
+                recipes = JsonSerializer.Deserialize<List<Recipe>>(deserializationString);
+
+                for (int id = 0; id < recipes.Count; id++)
                 {
-                    sDcetailsOfRecips += "Id: " + Row.Id;
-                    sDcetailsOfRecips += "Title: " + Row.Title + "\n";
-                    sDcetailsOfRecips += "Ingredients: " + Row.Ingredients + "\n";
-                    sDcetailsOfRecips += "Instructions: " + Row.Instructions + "\n";
-                    sDcetailsOfRecips += "Categories: " + Row.Categories + "\n";
+                    allTitles[id] = recipes[id].Title;
                 }
-                var panelOfrecipe = new Panel(sDcetailsOfRecips);
-                 AnsiConsole.Render(panelOfrecipe);
-            }
 
-            return allTitles;
+                var selectRecipe = AnsiConsole.Prompt
+                (new SelectionPrompt<string>()
+                .Title("Choose the recipe")
+                .PageSize(10)
+                .MoreChoicesText("[steelblue1](Move up and down to reveal more recipes)[/]")
+                .AddChoices(allTitles));
+
+                string detailsOfRecips = "";
+                foreach (var recipe in recipes)
+                {
+
+                    if (selectRecipe == recipe.Title)
+                    {
+                        detailsOfRecips += "[steelblue1]Id:[/]" + $"[lightcoral] {recipe.Id + 1} \n[/]";
+                        detailsOfRecips += "[steelblue1]Title:[/]" + $"[lightcoral] {recipe.Title} \n[/]";
+                        detailsOfRecips += "[steelblue1]Ingredients:[/]" + $"[lightcoral] {recipe.Ingredients} \n[/]";
+                        detailsOfRecips += "[steelblue1]Instructions:[/]" + $"[lightcoral] {recipe.Instructions} \n[/]";
+                        detailsOfRecips += "[steelblue1]Categories:[/]" + $"[lightcoral] {recipe.Categories} \n[/]";
+                    }
+
+                }
+
+                var panelOfRecipe = new Panel(detailsOfRecips);
+                panelOfRecipe.Border = BoxBorder.Double;
+                panelOfRecipe.Expand = true;
+                AnsiConsole.Write(panelOfRecipe);
+
+            }
         }
 
-        public async Task EditRecipeOrCategory(string newText, int line_to_edit)
+        public async Task EditRecipeOrCategory(int lineToEdit)
         {
-
             string jsonStringToEdit = await File.ReadAllTextAsync(@"Recipe.json");
             recipes = JsonSerializer.Deserialize<List<Recipe>>(jsonStringToEdit);
-            //string[] editRecip = new string[recipes.Count];
-            recipes[line_to_edit].Title = Console.ReadLine();
-            recipes[line_to_edit].Ingredients = Console.ReadLine();
-            recipes[line_to_edit].Instructions = Console.ReadLine();
-            recipes[line_to_edit].Categories = Console.ReadLine();
-            //var selectRecipe = AnsiConsole.Prompt
-            //(new SelectionPrompt<string[]>()
-            //.Title("Edit recipe")
-            //.PageSize(4)
-            //.AddChoices( recipes
-            //recipes[line_to_edit].Title,
-            //));
+            recipes[lineToEdit - 1].Title = AnsiConsole.Ask<string>("[steelblue1]Title: [/]");
+            recipes[lineToEdit - 1].Ingredients = AnsiConsole.Ask<string>("[steelblue1]Ingredients: [/]");
+            recipes[lineToEdit - 1].Instructions = AnsiConsole.Ask<string>("[steelblue1]Instructions: [/]");
+            recipes[lineToEdit - 1].Categories = AnsiConsole.Ask<string>("[steelblue1]Categories: [/]");
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
-
-            Console.WriteLine(recipes[line_to_edit].Title);
         }
 
     }
