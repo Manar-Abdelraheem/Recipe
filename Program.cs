@@ -6,6 +6,7 @@ using Spectre.Console;
 using System.Threading.Tasks;
 namespace Recipe
 {
+
     class Program
     {
         static async Task Main(String[] args)
@@ -53,10 +54,30 @@ namespace Recipe
         public string Ingredients { get; set; }
         public string Instructions { get; set; }
         public string Categories { get; set; }
+
         List<Recipe> recipes = new List<Recipe>();
         public Recipe()
         {
             Id = recipes.Count;
+        }
+
+        public string AddInstruction()
+        {
+            string inst;
+            string userInput;
+            inst = AnsiConsole.Ask<string>("[gold1]Press f if you finished\n[/][steelblue1]Instructions: [/]" + "\n");
+            bool finish = false;
+            while (!finish)
+            {
+                userInput = Console.ReadLine();
+                if (userInput == "f")
+                {
+                    finish = true;
+                    break;
+                }
+                inst += "\n" + userInput ;
+            }
+            return inst;
         }
 
         public async Task AddRecipe()
@@ -64,7 +85,7 @@ namespace Recipe
             int id = recipes.Count;
             var title = AnsiConsole.Ask<string>("[steelblue1]Title: [/]");
             var ingredients = AnsiConsole.Ask<string>("[steelblue1]Ingredients: [/]");
-            var instructions = AnsiConsole.Ask<string>("[steelblue1]Instructions: [/]");
+            var instructions = AddInstruction();
             var Categories = AnsiConsole.Ask<string>("[steelblue1]Categories: [/]");
             recipes.Add(new Recipe
             {
@@ -73,7 +94,7 @@ namespace Recipe
                 Ingredients = ingredients,
                 Instructions = instructions,
                 Categories = Categories
-            });
+            }) ;
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
         }
@@ -89,6 +110,7 @@ namespace Recipe
             {
                 string deserializationString = await File.ReadAllTextAsync(@"Recipe.json");
                 recipes = JsonSerializer.Deserialize<List<Recipe>>(deserializationString);
+
                 for (int id = 0; id < recipes.Count; id++)
                 {
                     allTitles[id] = recipes[id].Title;
@@ -124,7 +146,7 @@ namespace Recipe
             recipes = JsonSerializer.Deserialize<List<Recipe>>(jsonStringToEdit);
             recipes[lineToEdit - 1].Title = AnsiConsole.Ask<string>("[steelblue1]Title: [/]");
             recipes[lineToEdit - 1].Ingredients = AnsiConsole.Ask<string>("[steelblue1]Ingredients: [/]");
-            recipes[lineToEdit - 1].Instructions = AnsiConsole.Ask<string>("[steelblue1]Instructions: [/]");
+            recipes[lineToEdit - 1].Instructions = AddInstruction();
             recipes[lineToEdit - 1].Categories = AnsiConsole.Ask<string>("[steelblue1]Categories: [/]");
             string jsonString = JsonSerializer.Serialize(recipes);
             await File.WriteAllTextAsync(@"Recipe.json", jsonString);
